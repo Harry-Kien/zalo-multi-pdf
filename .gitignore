@@ -1,0 +1,7 @@
+# Python env
+venv/
+__pycache__/
+
+# Credentials & env
+.env
+creds.json
