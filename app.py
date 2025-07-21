@@ -33,8 +33,11 @@ DEFAULT_FORMS = {
     "form_3": "https://drive.google.com/file/d/124zgnEeb0nU-DfQzcqh27MWtKS-WuF3D/uc?export=download",
 }
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
+    if request.method == 'GET':
+        return "Zalo Webhook xác thực thành công!", 200
+
     data  = request.json or {}
     event = data.get('event_name')
 
@@ -82,6 +85,7 @@ def webhook():
 
     # Unknown event
     return jsonify({"message": "unknown event"}), 400
+
 
 
 def check_follow_status(user_id):
