@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials # type: ignore
+from oauth2client.service_account import ServiceAccountCredentials  # type: ignore
 import requests
 from dotenv import load_dotenv
 import os
@@ -33,9 +33,12 @@ def index():
     return "Chào bạn, Flask đã chạy thành công!"
 
 # === 6. Route xác thực domain Zalo yêu cầu ===
-@app.route("/zalo_verifierEFwt9SFQFmyHoxauwhuN4pgrcGZMmqqVCpKo.html")
+@app.route("/zalo_verifierEFwt9SFQFmyHoxauwhuN4pgrcGZMmqzVCpKo.html")
 def zalo_verify():
-    return send_from_directory('static', 'zalo_verifierEFwt9SFQFmyHoxauwhuN4pgrcGZMmqqVCpKo.html')
+    return send_from_directory(
+        os.path.join(app.root_path, 'static'),
+        'zalo_verifierEFwt9SFQFmyHoxauwhuN4pgrcGZMmqzVCpKo.html'
+    )
 
 # === 7. Webhook xử lý các sự kiện từ Zalo ===
 @app.route('/webhook', methods=['GET', 'POST'])
@@ -43,10 +46,10 @@ def webhook():
     if request.method == 'GET':
         return "Zalo Webhook xác thực thành công!", 200
 
-    data  = request.json or {}
+    data = request.json or {}
     event = data.get('event_name')
 
-    # --- Xử lý sự kiện follow OA ---
+    # --- Sự kiện follow OA ---
     if event == "follow":
         user_id = data.get('user_id')
         if user_id:
@@ -56,7 +59,7 @@ def webhook():
                 send_zalo_message(user_id, "Cảm ơn bạn đã follow! Nhấn biểu mẫu để nhận tài liệu.")
         return jsonify({"message": "follow handled"}), 200
 
-    # --- Xử lý khi user gửi tin nhắn chọn form ---
+    # --- Sự kiện user nhắn tin nhận form ---
     elif event == "user_send_message":
         user_id   = data.get('sender', {}).get('id')
         form_type = data.get('form_type')
@@ -65,10 +68,14 @@ def webhook():
             send_zalo_message(user_id, "Vui lòng follow OA để nhận biểu mẫu!")
             return jsonify({"message": "not a follower"}), 403
 
-        col_map = {"form_1": "form_1_url", "form_2": "form_2_url", "form_3": "form_3_url"}
-        col     = col_map.get(form_type)
+        col_map = {
+            "form_1": "form_1_url",
+            "form_2": "form_2_url",
+            "form_3": "form_3_url"
+        }
+        col = col_map.get(form_type)
         records = sheet.get_all_records()
-        link    = next((r[col] for r in records if str(r["user_id_zalo"]) == str(user_id)), None) if col else None
+        link = next((r[col] for r in records if str(r["user_id_zalo"]) == str(user_id)), None) if col else None
 
         if not link:
             link = DEFAULT_FORMS.get(form_type)
